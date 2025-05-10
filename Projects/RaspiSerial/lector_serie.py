@@ -11,6 +11,8 @@ PIN_1 = 2
 PIN_2 = 27
 PIN_3 = 22
 
+# Esto es una prueba
+
 """
 # Indica al programa que pines serán salida
 gpio.OutputDevice(PIN_1, initial_value=False)
