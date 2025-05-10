@@ -1,22 +1,25 @@
-import serial
+from serial import Serial as serial
 import gpiozero as gpio
 import os
 import time
 import csv
+import io
 
 #-------------------------------------- Setup ------------------------------------------#
 
 # Declara los pines para desperar a los ESP32
-PIN_1 = 2
+PIN_1 = 17
 PIN_2 = 27
 PIN_3 = 22
 
-"""
+# Esto es una prueba
+
+
 # Indica al programa que pines serán salida
-gpio.OutputDevice(PIN_1, initial_value=False)
-gpio.OutputDevice(PIN_2, initial_value=False)
-gpio.OutputDevice(PIN_3, initial_value=False)
-"""
+gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
+#gpio.OutputDevice(PIN_2, initial_value=False)
+#gpio.OutputDevice(PIN_3, initial_value=False)
+
 
 # Puertos para la comunicación
 puerto_1 = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
@@ -97,15 +100,12 @@ def writeData(msg_dividido):
 
 #---------------------------------- Loop principal -------------------------------------#
 while True:
-    # Resetea los buffers antes de nada
-    serial.reset_input_buffer();
-    serial.reset_output_buffer();
 
     # Enciende los ESP32 y lee el puerto antes que nada
-    gpio.OutputDevice.on(PIN_1)
+    gpio.OutputDevice.on(gpio_1)
 
     # Mientras el puerto no reciba nada, espera
-    while serial.in_waiting(puerto_1) == 0:
+    while serial.readline() == 0:
         pass
 
     # Ya ha recibido algo, apaga el pin de encendido y lee el puerto
