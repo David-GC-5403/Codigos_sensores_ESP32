@@ -1,4 +1,4 @@
-from serial import Serial as serial
+import serial
 import gpiozero as gpio
 import os
 import time
@@ -16,7 +16,7 @@ PIN_3 = 22
 
 
 # Indica al programa que pines serán salida
-gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
+#gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
 #gpio.OutputDevice(PIN_2, initial_value=False)
 #gpio.OutputDevice(PIN_3, initial_value=False)
 
@@ -25,11 +25,7 @@ gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
 puerto_1 = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
 #puerto_2 = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)
 #puerto_3 = serial.Serial("/dev/ttyUSB2", 9600, timeout=1)
-
-# Los puertos se abren nada mas declararlos, pero los quiero cerrados inicialmente.
-puerto_1.close()
-#puerto_2.close()
-#puerto_3.close()
+puerto_1.close()  # Cierra el puerto para evitar problemas de lectura
 
 # Configuracion del archivo donde se guardara la info
 file_exists = os.path.exists("data.csv")
@@ -50,18 +46,6 @@ with open("datos.csv", "a") as file:
 
 
 #-------------------------------------- Funciones --------------------------------------#
-
-def readSerial(puerto):
-    try:
-        puerto.open()
-        payload = puerto.readline().decode('utf-8').strip()
-        puerto.close()
-
-        return payload
-    except:
-        print("Error al abrir el puerto")
-        return
-
 
 def writeData(msg_dividido):
     # Segun el mensaje recibido, se almacenara la media en una columna u otra del csv
@@ -90,7 +74,7 @@ def writeData(msg_dividido):
         
         else:
             print("Medida no reconocida")
-
+            print(msg_dividido[0])
 
         buffer.append(time.strftime("%H:%M:%S"))  # Añade la hora al buffer
         writer.writerow(buffer)  # Escribe el buffer en el csv
@@ -102,20 +86,20 @@ def writeData(msg_dividido):
 while True:
 
     # Enciende los ESP32 y lee el puerto antes que nada
-    gpio.OutputDevice.on(gpio_1)
-
+    #gpio.OutputDevice.on(gpio_1)
     # Mientras el puerto no reciba nada, espera
-    while serial.readline() == 0:
+    puerto_1.open()  # Abre el puerto
+    while not puerto_1.in_waiting > 0:
         pass
 
     # Ya ha recibido algo, apaga el pin de encendido y lee el puerto
-    gpio.OutputDevice.off(PIN_1)
-    mensaje = readSerial(puerto_1)
-
-    serial.write(puerto_1, "off")   # El esp32 espera un mensaje para dormir, en este caso "off"
+    #gpio.OutputDevice.off(PIN_1)
+    mensaje = puerto_1.readline().decode('utf-8').strip()  # Lee el puerto
+    puerto_1.write(b"off")   # El esp32 espera un mensaje para dormir, en este caso "off"
+    
 
     split_1 = mensaje.split(";")    # Separa el mensaje
-
+    puerto_1.close()  # Cierra el puerto    
     """""
     gpio.OutputDevice.on(PIN_2)
     mensaje = readSerial(puerto_2)
@@ -135,7 +119,7 @@ while True:
     # writeData(split_2)
     # writeData(split_3)
 
-    time.sleep(10)
+    time.sleep(1)
 
     
 
