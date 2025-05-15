@@ -1,26 +1,28 @@
-//Incluir las bibliotecas OneWire y DallasTemperature
+// Codigo para el sensor de PH de DFRobot
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Arduino.h>
-#include <esp_sleep.h>
+#include "esp_sleep.h"
+#include <DFRobot_PH.h>
 
-//Pin del sensor de temperatura
 #define oneWireBus 4
 #define wakePin GPIO_NUM_2
+#define adcPin 32
+#define Vref 5
 
+
+DFRobot_PH ph;
 //Objeto oneWire de la clase OneWire
 OneWire oneWire(oneWireBus);
-
 //El objeto anterior lo volvemos un objeto (sensors) de la clase DallasTemperature
 DallasTemperature sensors(&oneWire);
 
-// Array con la dirección del sensor. Para usar 1 solo no es muy
-// importante, pero necesario al usar varios
-//DeviceAddress dirSensor = {0x28, 0xFF, 0x64, 0x1F, 0x7D, 0x94, 0xC4, 0x48};
 DeviceAddress dirSensor;
+
 
 float printTemperature(DeviceAddress deviceAdress);
 void findDevices(DeviceAddress direccion);
+
 
 void setup() {
   Serial.begin(9600);
@@ -28,6 +30,9 @@ void setup() {
   pinMode(wakePin, INPUT_PULLDOWN);
   esp_sleep_enable_gpio_wakeup();
   gpio_wakeup_enable(wakePin, GPIO_INTR_HIGH_LEVEL);
+
+  ph.begin();
+  pinMode(adcPin, INPUT);
 
   // Inicializa la comunicación
   sensors.begin();
@@ -49,11 +54,18 @@ void loop() {
   sensors.requestTemperatures(); // Comando para actualizar la medida de temperatura
   TempC = printTemperature(dirSensor);
 
-  Serial.print("xA;Temperatura;");
+  // Mide el PH
+  float analog = analogRead(adcPin);
+  float tension = analog * Vref/1024.0;
+  float ph_value = ph.readPH(tension, TempC); // El segundo argumento es la temperatura ambiente
+
+  // Envia tanto el PH como la temperatura
+  Serial.print("xA;PH;");
+  Serial.print(ph_value, 2);
+  Serial.print(";Temperatura;");
   Serial.print(TempC, 2);
   Serial.println(";xZ");
 
-  
   // Wait for "off" command with timeout
   unsigned long start = millis();
   while(millis() - start < 10000) {
@@ -69,7 +81,9 @@ void loop() {
 
   Serial.flush(); // Ensure all data is sent
   delay(100); // Give time for transmission
+
 }
+
 
 float printTemperature(DeviceAddress deviceAddress)
 {
