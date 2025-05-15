@@ -56,25 +56,47 @@ def writeData(*args):
     with open("datos.csv", "a") as file:
         writer = csv.writer(file)
         for param in args:
-            if param[1] == "Temperatura":
-                Temp = param[2]
+            if len(param) <= 4:  # Si el mensaje tiene 4 o menos valores, no es el sensor que manda medida + temperatura
+                if param[1] == "Temperatura":
+                    Temp = param[2]
+                    row[0] = Temp
+
+                elif param[1] == "TDS":
+                    TDS = param[2]
+                    row[1] = TDS
+                
+                elif param[1] == "PH":
+                    PH = param[2]
+                    row[2] = PH
+                
+                elif param[1] == "Turbidez":
+                    Turbidez = param[2]
+                    row[3] = Turbidez
+                
+                else:
+                    print("Medida no reconocida")
+                    print(param[1])
+
+            else: # Si el mensaje tiene más de 4 valores, es el sensor que manda medida + temperatura
+                # Primero separa el mensaje de forma normal
+                if param[1] == "TDS":
+                    TDS = param[2]
+                    row[1] = TDS
+                
+                elif param[1] == "PH":
+                    PH = param[2]
+                    row[2] = PH
+                
+                elif param[1] == "Turbidez":
+                    Turbidez = param[2]
+                    row[3] = Turbidez
+                
+                else:
+                    print("Medida no reconocida")
+                    print(param[1])
+                # Añade al final el valor de la temperatura
+                Temp = param[4]
                 row[0] = Temp
-            
-            elif param[1] == "TDS":
-                TDS = param[2]
-                row[1] = TDS
-            
-            elif param[1] == "PH":
-                PH = param[2]
-                row[2] = PH
-            
-            elif param[1] == "Turbidez":
-                Turbidez = param[2]
-                row[3] = Turbidez
-            
-            else:
-                print("Medida no reconocida")
-                print(param[1])
 
         row.append(time.strftime("%H:%M:%S"))  # Añade la hora al buffer
         writer.writerow(row)  # Escribe el buffer en el csv
@@ -117,6 +139,7 @@ while True:
     # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ"
     split_2 = mensaje.split(";")
      
+    
     gpio_3.on()
     # Mientras el puerto no reciba nada, espera
     puerto_3.open()  # Abre el puerto
