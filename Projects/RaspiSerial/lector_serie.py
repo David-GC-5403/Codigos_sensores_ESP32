@@ -14,13 +14,13 @@ PIN_3 = 22
 
 
 # Indica al programa que pines serán salida
-gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
-gpio_2 = gpio.OutputDevice(PIN_2, initial_value=False)
+#gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
+#gpio_2 = gpio.OutputDevice(PIN_2, initial_value=False)
 #gpio.OutputDevice(PIN_3, initial_value=False)
 
 
 # Puertos para la comunicación
-puerto_1 = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
+puerto_1 = serial.Serial("/dev/ttyUSB2", 9600, timeout=1)
 puerto_2 = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)
 #puerto_3 = serial.Serial("/dev/ttyUSB2", 9600, timeout=1)
 puerto_1.close()  # Cierra los puertos inicialmente
@@ -46,53 +46,52 @@ with open("datos.csv", "a") as file:
 
 #-------------------------------------- Funciones --------------------------------------#
 
-def writeData(msg_dividido):
+def writeData(*args):
     # Segun el mensaje recibido, se almacenara la media en una columna u otra del csv
     # Se inicializa el buffer con NaN para evitar errores al escribir en el csv
-    buffer = ["NaN", "NaN", "NaN", "NaN"]
+    row = ["NaN", "NaN", "NaN", "NaN"]
 
-    # Abre el archivo para escribir
+    
     with open("datos.csv", "a") as file:
         writer = csv.writer(file)
+        for param in args:
+            if param[1] == "Temperatura":
+                Temp = param[2]
+                row[0] = Temp
+            
+            elif param[1] == "TDS":
+                TDS = param[2]
+                row[1] = TDS
+            
+            elif param[1] == "PH":
+                PH = param[2]
+                row[2] = PH
+            
+            elif param[1] == "Turbidez":
+                Turbidez = param[2]
+                row[3] = Turbidez
+            
+            else:
+                print("Medida no reconocida")
+                print(param[1])
 
-        if msg_dividido[1] == "Temperatura":
-            Temp = msg_dividido[2]
-            buffer[0] = Temp
-        
-        elif msg_dividido[1] == "TDS":
-            TDS = msg_dividido[2]
-            buffer[1] = TDS
-        
-        elif msg_dividido[1] == "PH":
-            PH = msg_dividido[2]
-            buffer[2] = PH
-        
-        elif msg_dividido[1] == "Turbidez":
-            Turbidez = msg_dividido[2]
-            buffer[3] = Turbidez
-        
-        else:
-            print("Medida no reconocida")
-            print(msg_dividido[1])
+        row.append(time.strftime("%H:%M:%S"))  # Añade la hora al buffer
+        writer.writerow(row)  # Escribe el buffer en el csv
+        print(row)  # Imprime el buffer en la consola para ver que se ha escrito correctamente
 
-        buffer.append(time.strftime("%H:%M:%S"))  # Añade la hora al buffer
-        writer.writerow(buffer)  # Escribe el buffer en el csv
-        print(buffer)  # Imprime el buffer en la consola para ver que se ha escrito correctamente
-        # Cierra el archivo
-        file.close()
 
 #---------------------------------- Loop principal -------------------------------------#
 while True:
 
     # Enciende los ESP32 y lee el puerto antes que nada
-    gpio_1.on
+    #gpio_1.on
     # Mientras el puerto no reciba nada, espera
     puerto_1.open()  # Abre el puerto
     while not puerto_1.in_waiting > 0:
         pass
 
     # Ya ha recibido algo, apaga el pin de encendido y lee el puerto
-    gpio_1.off
+    #gpio_1.off
     mensaje = puerto_1.readline().decode('utf-8').strip()  # Lee el puerto
     puerto_1.write(b"off")   # El esp32 espera un mensaje para dormir, en este caso "off"
     puerto_1.close()  # Cierra el puerto  
@@ -100,21 +99,21 @@ while True:
     # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ"
     split_1 = mensaje.split(";")    # Separa el mensaje
       
-    gpio_2.on
+    #gpio_2.on
     # Mientras el puerto no reciba nada, espera
     puerto_2.open()  # Abre el puerto
     while not puerto_2.in_waiting > 0:
         pass
 
     # Ya ha recibido algo, apaga el pin de encendido y lee el puerto
-    gpio_2.off
+    #gpio_2.off
 
     mensaje = puerto_2.readline().decode('utf-8').strip()  # Lee el puerto
-    puerto_1.write(b"off")   # El esp32 espera un mensaje para dormir, en este caso "off"
+    puerto_2.write(b"off")   # El esp32 espera un mensaje para dormir, en este caso "off"
     puerto_2.close()  # Cierra el puerto 
 
     # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ"
-    split_2 = mensaje.split(";")    # Separa el mensaje
+    split_2 = mensaje.split(";")
      
 
     """""
@@ -126,11 +125,11 @@ while True:
     # En este punto los ESP32 estan dormidos, podemos tratar los datos con tranquilidad
     """
 
-    writeData(split_1)
-    writeData(split_2)
+    writeData(split_1,split_2)
+    #writeData(split_2)
     # writeData(split_3)
 
     time.sleep(1)
 
-    
+
 
