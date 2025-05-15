@@ -56,25 +56,25 @@ def writeData(msg_dividido):
     with open("datos.csv", "a") as file:
         writer = csv.writer(file)
 
-        if msg_dividido[0] == "Temperatura":
-            Temp = msg_dividido[1]
+        if msg_dividido[1] == "Temperatura":
+            Temp = msg_dividido[2]
             buffer[0] = Temp
         
-        elif msg_dividido[0] == "TDS":
-            TDS = msg_dividido[1]
+        elif msg_dividido[1] == "TDS":
+            TDS = msg_dividido[2]
             buffer[1] = TDS
         
-        elif msg_dividido[0] == "PH":
-            PH = msg_dividido[1]
+        elif msg_dividido[1] == "PH":
+            PH = msg_dividido[2]
             buffer[2] = PH
         
-        elif msg_dividido[0] == "Turbidez":
-            Turbidez = msg_dividido[1]
+        elif msg_dividido[1] == "Turbidez":
+            Turbidez = msg_dividido[2]
             buffer[3] = Turbidez
         
         else:
             print("Medida no reconocida")
-            print(msg_dividido[0])
+            print(msg_dividido[1])
 
         buffer.append(time.strftime("%H:%M:%S"))  # Añade la hora al buffer
         writer.writerow(buffer)  # Escribe el buffer en el csv
@@ -98,6 +98,7 @@ while True:
     puerto_1.write(b"off")   # El esp32 espera un mensaje para dormir, en este caso "off"
     
 
+    # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ"
     split_1 = mensaje.split(";")    # Separa el mensaje
     puerto_1.close()  # Cierra el puerto    
     """""
