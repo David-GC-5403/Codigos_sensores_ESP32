@@ -3,7 +3,6 @@ import gpiozero as gpio
 import os
 import time
 import csv
-import io
 
 #-------------------------------------- Setup ------------------------------------------#
 
@@ -14,17 +13,19 @@ PIN_3 = 22
 
 
 # Indica al programa que pines serán salida
-#gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
-#gpio_2 = gpio.OutputDevice(PIN_2, initial_value=False)
-#gpio.OutputDevice(PIN_3, initial_value=False)
+gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
+gpio_2 = gpio.OutputDevice(PIN_2, initial_value=False)
+gpio_3 = gpio.OutputDevice(PIN_3, initial_value=False)
 
 
 # Puertos para la comunicación
-puerto_1 = serial.Serial("/dev/ttyUSB2", 9600, timeout=1)
+puerto_1 = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
 puerto_2 = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)
-#puerto_3 = serial.Serial("/dev/ttyUSB2", 9600, timeout=1)
+puerto_3 = serial.Serial("/dev/ttyUSB2", 9600, timeout=1)
 puerto_1.close()  # Cierra los puertos inicialmente
 puerto_2.close()  
+puerto_3.close() 
+
 
 # Configuracion del archivo donde se guardara la info
 file_exists = os.path.exists("data.csv")
@@ -84,14 +85,14 @@ def writeData(*args):
 while True:
 
     # Enciende los ESP32 y lee el puerto antes que nada
-    #gpio_1.on
+    gpio_1.on()
     # Mientras el puerto no reciba nada, espera
     puerto_1.open()  # Abre el puerto
     while not puerto_1.in_waiting > 0:
         pass
 
     # Ya ha recibido algo, apaga el pin de encendido y lee el puerto
-    #gpio_1.off
+    gpio_1.off()
     mensaje = puerto_1.readline().decode('utf-8').strip()  # Lee el puerto
     puerto_1.write(b"off")   # El esp32 espera un mensaje para dormir, en este caso "off"
     puerto_1.close()  # Cierra el puerto  
@@ -99,14 +100,15 @@ while True:
     # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ"
     split_1 = mensaje.split(";")    # Separa el mensaje
       
-    #gpio_2.on
+
+    gpio_2.on()
     # Mientras el puerto no reciba nada, espera
     puerto_2.open()  # Abre el puerto
     while not puerto_2.in_waiting > 0:
         pass
 
     # Ya ha recibido algo, apaga el pin de encendido y lee el puerto
-    #gpio_2.off
+    gpio_2.off()
 
     mensaje = puerto_2.readline().decode('utf-8').strip()  # Lee el puerto
     puerto_2.write(b"off")   # El esp32 espera un mensaje para dormir, en este caso "off"
@@ -115,19 +117,23 @@ while True:
     # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ"
     split_2 = mensaje.split(";")
      
+    gpio_3.on()
+    # Mientras el puerto no reciba nada, espera
+    puerto_3.open()  # Abre el puerto
+    while not puerto_3.in_waiting > 0:
+        pass
 
-    """""
-    gpio.OutputDevice.on(PIN_3)
-    mensaje = readSerial(puerto_3)
-    gpio.OutputDevice.off(PIN_3)
+    # Ya ha recibido algo, apaga el pin de encendido y lee el puerto
+    gpio_3.off()
+
+    mensaje = puerto_3.readline().decode('utf-8').strip()  # Lee el puerto
+    puerto_3.write(b"off")   # El esp32 espera un mensaje para dormir, en este caso "off"
+    puerto_3.close()  # Cierra el puerto 
+
+    # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ"
     split_3 = mensaje.split(";")
 
-    # En este punto los ESP32 estan dormidos, podemos tratar los datos con tranquilidad
-    """
-
-    writeData(split_1,split_2)
-    #writeData(split_2)
-    # writeData(split_3)
+    writeData(split_1,split_2,split_3)
 
     time.sleep(1)
 
