@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Archivo de Python a ejecutar
+ARCHIVO="lector_serie.py"
+
+# Verificar que Python esté instalado
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python3 no está instalado. Instálalo con: sudo apt install python3"
+    exit 1
+fi
+
+# Ejecutar el script
+echo "🚀 Ejecutando $ARCHIVO..."
+python3 "$ARCHIVO"
+
+read -p "Press Enter to exit"
+

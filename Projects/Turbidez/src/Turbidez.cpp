@@ -29,8 +29,11 @@ void loop() {
   
   // Send data once
   Serial.print("xA;Turbidez;");
+  Serial.flush();
   Serial.print(turb, 2);
+  Serial.flush();
   Serial.println(";xZ");
+  Serial.flush();
   
   // Wait for "off" command with timeout
   unsigned long start = millis();
