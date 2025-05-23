@@ -5,6 +5,51 @@ import time
 import csv
 
 #-------------------------------------- Funciones --------------------------------------#
+def setup_pin():
+    # Setup GPIO and Serial ports
+    gpio_1 = gpio_2 = gpio_3 = None
+    
+
+    try:
+        gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
+    except Exception as e:
+        print(f"Failed to initialize GPIO 1: {e}")
+
+    try:
+        gpio_2 = gpio.OutputDevice(PIN_2, initial_value=False)
+    except Exception as e:
+        print(f"Failed to initialize GPIO 2: {e}")
+
+    try:
+        gpio_3 = gpio.OutputDevice(PIN_3, initial_value=False)
+    except Exception as e:
+        print(f"Failed to initialize GPIO 3: {e}")
+
+    return gpio_1, gpio_2, gpio_3
+
+def setup_serial():
+    puerto_1 = puerto_2 = puerto_3 = None
+
+    try:
+        puerto_1 = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
+        puerto_1.close()
+    except Exception as e:
+        print(f"Failed to initialize Serial Port 1: {e}")
+
+    try:
+        puerto_2 = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)
+        puerto_2.close()
+    except Exception as e:
+        print(f"Failed to initialize Serial Port 2: {e}")
+
+    try:
+        puerto_3 = serial.Serial("/dev/ttyUSB2", 9600, timeout=1)
+        puerto_3.close()
+    except Exception as e:
+        print(f"Failed to initialize Serial Port 3: {e}")
+
+    return puerto_1, puerto_2, puerto_3 
+
 def setup_datafile(header, name):
     # Crea el archivo si este no existe
     file_exists = os.path.exists(name)
@@ -20,7 +65,6 @@ def setup_datafile(header, name):
         if first_line is None or first_line != header:
             csvwriter = csv.writer(file)
             csvwriter.writerow(header)  # Escribe la cabecera si la linea leida no es la que toca
-
 
 def writeData(*args):
     # Segun el mensaje recibido, se almacenara la media en una columna u otra del csv
@@ -76,10 +120,10 @@ def writeData(*args):
         writer.writerow(row)  # Escribe el buffer en el csv
         print(row)  # Imprime el buffer en la consola para ver que se ha escrito correctamente
 
-def read_data(disp):
+def read_data(disp, pines, puertos):
     if disp == 1:
-        pin_gpio = gpio_1
-        serial_port = puerto_1
+        pin_gpio = pines[1]
+        serial_port = puertos[1]
     elif disp == 2:
         pin_gpio = gpio_2
         serial_port = puerto_2
@@ -113,30 +157,20 @@ PIN_1 = 17
 PIN_2 = 27
 PIN_3 = 22
 
-
-# Indica al programa que pines serán salida
-gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
-gpio_2 = gpio.OutputDevice(PIN_2, initial_value=False)
-gpio_3 = gpio.OutputDevice(PIN_3, initial_value=False)
-
-
-# Puertos para la comunicación
-puerto_1 = serial.Serial("/dev/ttyUSB0", 9600, timeout=1)
-puerto_2 = serial.Serial("/dev/ttyUSB1", 9600, timeout=1)
-puerto_3 = serial.Serial("/dev/ttyUSB2", 9600, timeout=1)
-puerto_1.close()  # Cierra los puertos inicialmente
-puerto_2.close()  
-puerto_3.close() 
+gpio_1, gpio_2, gpio_3 = setup_pin() # Inicializa los pines
+puerto_1, puerto_2, puerto_3 = setup_serial() # Inicializa el puerto serie
 
 fields = ["Temperatura", "TDS", "PH", "Turbidez", "Hora"] # Vector con el header y orden de medidas
 
 setup_datafile(fields, "datos.csv")
 
+pines = [gpio_1, gpio_2, gpio_3]
+puertos = [puerto_1, puerto_2, puerto_3]
 
 #---------------------------------- Loop principal -------------------------------------#
 while True:
 
-    mensaje_1 = read_data(1)
+    mensaje_1 = read_data(1, pines, puertos)
     split_1 = mensaje_1.split(";") # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ". Aqui se separa
       
 
