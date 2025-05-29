@@ -9,12 +9,10 @@ def setup_pin():
     # Setup GPIO and Serial ports
     gpio_1 = gpio_2 = gpio_3 = None
     
-
     try:
         gpio_1 = gpio.OutputDevice(PIN_1, initial_value=False)
     except Exception as e:
         print(f"Failed to initialize GPIO 1: {e}")
-
     try:
         gpio_2 = gpio.OutputDevice(PIN_2, initial_value=False)
     except Exception as e:
@@ -121,33 +119,34 @@ def writeData(*args):
         print(row)  # Imprime el buffer en la consola para ver que se ha escrito correctamente
 
 def read_data(disp, pines, puertos):
-    if disp == 1:
-        pin_gpio = pines[1]
-        serial_port = puertos[1]
-    elif disp == 2:
-        pin_gpio = gpio_2
-        serial_port = puerto_2
-    elif disp == 3:
-        pin_gpio = gpio_3
-        serial_port = puerto_3
-
-    # Enciende el ESP32 y el puerto serie
-    pin_gpio.on()
-    serial_port.open()
-
-    # Espera a que haya algo en el puerto serie
-    while not serial_port.in_waiting > 0:
-        pass
-
-    # En este punto ha recibido un mensaje, vamos a leerlo
-    pin_gpio.off() # Apaga el pin de encendido, no hace falta ya
-    payload = serial_port.readline().decode('utf-8').strip()
     
-    # Una vez se ha leido el mensaje, se le indica al controladoe que puede dormirse
-    serial_port.write(b"off") # Envía "off" en binario
-    serial_port.close() # Cierra el puerto
+    try:
+        # Selecciona pin y puerto
+        pin_gpio = pines[disp - 1]
+        serial_port = puertos[disp - 1]
 
-    return payload
+        if pin_gpio is None or serial_port is None:
+            return f"{disp};NaN"
+
+        # Enciende el ESP32 y el puerto serie
+        pin_gpio.on()
+        serial_port.open()
+
+        # Espera a que haya algo en el puerto serie
+        while not serial_port.in_waiting > 0:
+            pass
+
+        # En este punto ha recibido un mensaje, vamos a leerlo
+        pin_gpio.off() # Apaga el pin de encendido, no hace falta ya
+        payload = serial_port.readline().decode('utf-8').strip()
+        
+        # Una vez se ha leido el mensaje, se le indica al controladoe que puede dormirse
+        serial_port.write(b"off") # Envía "off" en binario
+        serial_port.close() # Cierra el puerto
+
+        return payload
+    except Exception as e:
+        print(f"Error leyendo del sensor {disp}: {e}")
 
 
 #-------------------------------------- Setup ------------------------------------------#
@@ -169,6 +168,15 @@ puertos = [puerto_1, puerto_2, puerto_3]
 
 #---------------------------------- Loop principal -------------------------------------#
 while True:
+    # Try to reinitialize serial ports in case of reconnection
+    for i in range(3):
+        if puertos[i] is None or not os.path.exists(f"/dev/ttyUSB{i}"):
+            try:
+                puertos[i] = serial.Serial(f"/dev/ttyUSB{i}", 9600, timeout=1)
+                puertos[i].close()
+            except Exception as e:
+                puertos[i] = None
+
 
     mensaje_1 = read_data(1, pines, puertos)
     split_1 = mensaje_1.split(";") # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ". Aqui se separa
