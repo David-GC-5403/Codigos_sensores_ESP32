@@ -147,7 +147,11 @@ def read_data(disp, pines, puertos):
         return payload
     except Exception as e:
         print(f"Error leyendo del sensor {disp}: {e}")
+        pin_gpio.off()
+        serial_port.close()
         return f"{disp};NaN;NaN;NaN"
+        
+
 
 
 #-------------------------------------- Setup ------------------------------------------#
