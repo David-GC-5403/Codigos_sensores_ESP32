@@ -182,11 +182,11 @@ while True:
     split_1 = mensaje_1.split(";") # El mensaje recibido sera del tipo "xA;Medida;Valor;xZ". Aqui se separa
       
 
-    mensaje_2 = read_data(2)
+    mensaje_2 = read_data(2, pines, puertos)
     split_2 = mensaje_2.split(";")
      
     
-    mensaje_3 = read_data(3)
+    mensaje_3 = read_data(3, pines, puertos)
     split_3 = mensaje_3.split(";")
 
     writeData(split_1,split_2,split_3)
