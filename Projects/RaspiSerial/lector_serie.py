@@ -119,7 +119,8 @@ def writeData(*args):
         print(row)  # Imprime el buffer en la consola para ver que se ha escrito correctamente
 
 def read_data(disp, pines, puertos):
-    
+    error_timeout = False
+
     try:
         # Selecciona pin y puerto
         pin_gpio = pines[disp - 1]
@@ -133,12 +134,19 @@ def read_data(disp, pines, puertos):
         serial_port.open()
 
         # Espera a que haya algo en el puerto serie
+        timeout = time.time() + 5
         while not serial_port.in_waiting > 0:
-            pass
+            if time.time()>timeout:
+                print("Timeout excedido")
+                error_timeout = True
+                pin_gpio.off()
+
+                return f"{disp};NaN"
 
         # En este punto ha recibido un mensaje, vamos a leerlo
-        pin_gpio.off() # Apaga el pin de encendido, no hace falta ya
-        payload = serial_port.readline().decode('utf-8').strip()
+        if error_timeout == False:
+            pin_gpio.off() # Apaga el pin de encendido, no hace falta ya
+            payload = serial_port.readline().decode('utf-8').strip()
         
         # Una vez se ha leido el mensaje, se le indica al controladoe que puede dormirse
         serial_port.write(b"off") # Envía "off" en binario
