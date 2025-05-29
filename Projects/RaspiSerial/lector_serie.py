@@ -127,21 +127,21 @@ def read_data(disp, pines, puertos):
         serial_port = puertos[disp - 1]
 
         if pin_gpio is None or serial_port is None:
-            return f"{disp};NaN"
+            return f"{disp};NaN;NaN;NaN"
 
         # Enciende el ESP32 y el puerto serie
         pin_gpio.on()
         serial_port.open()
 
         # Espera a que haya algo en el puerto serie
-        timeout = time.time() + 5
+        timeout = time.time() + 1
         while not serial_port.in_waiting > 0:
             if time.time()>timeout:
                 print("Timeout excedido")
                 error_timeout = True
                 pin_gpio.off()
 
-                return f"{disp};NaN"
+                return f"{disp};NaN;NaN;NaN"
 
         # En este punto ha recibido un mensaje, vamos a leerlo
         if error_timeout == False:
@@ -155,6 +155,7 @@ def read_data(disp, pines, puertos):
         return payload
     except Exception as e:
         print(f"Error leyendo del sensor {disp}: {e}")
+        return f"{disp};NaN;NaN;NaN"
 
 
 #-------------------------------------- Setup ------------------------------------------#
