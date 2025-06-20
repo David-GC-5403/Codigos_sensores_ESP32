@@ -1,17 +1,20 @@
 // Codigo para el sensor de PH de DFRobot
 #include <Arduino.h>
 #include "esp_sleep.h"
-#include <DFRobot_PH.h>
+#include <DFRobot_ESP_PH.h>
+#include <EEPROM.h>
 
 #define wakePin GPIO_NUM_2
-#define adcPin 32 // Pin para el ph
+#define adcPin 34 // Pin para el ph
 #define Vref 5
+float temp = 25;
 
-DFRobot_PH ph;
+DFRobot_ESP_PH ph;
 
 
 void setup() {
   Serial.begin(9600);
+  EEPROM.begin(32); // Inicia la EEPROM con 32 bytes
 
   // Configuracion sleep
   pinMode(wakePin, INPUT_PULLDOWN);
@@ -29,8 +32,8 @@ void loop() {
 
   // Mide el PH
   float analog = analogRead(adcPin);
-  float tension = analog * Vref/4095.0;
-  float ph_value = 3.5+tension;
+  float tension = analog * Vref/4096.0;
+  float ph_value = ph.readPH(tension, temp);
 
   // Envia tanto el PH como la temperatura
   Serial.print("xA;PH;");
