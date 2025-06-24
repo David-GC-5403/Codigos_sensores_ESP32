@@ -111,7 +111,13 @@ void loop() {
   float tdsValue=(133.42*VolTDS_comp*VolTDS_comp*VolTDS_comp - 255.86*VolTDS_comp*VolTDS_comp + 857.39*VolTDS_comp)*0.5; //convert voltage value to tds value
 
   Serial.print("xA;TDS;");
+  Serial.flush();
   Serial.print(tdsValue, 2);
+  Serial.flush();
+  Serial.print(";Temp;");
+  Serial.flush();
+  Serial.print(TempC, 2);
+  Serial.flush();
   Serial.println(";xZ");
 
   // Wait for "off" command with timeout
@@ -129,5 +135,4 @@ void loop() {
 
   Serial.flush(); // Ensure all data is sent
   delay(100); // Give time for transmission
-
 }
